@@ -1,0 +1,12 @@
+From: Chris Warburton
+Date: Fri, 16 Jun 2017 14:18:26 +0100
+State: new
+Subject: Test that asv example env plugin works
+Message-Id: <a3d479ae5f8a58b8-0-artemis@nixos>
+
+asv's test suite comes with an example environment plugin:
+
+https://github.com/spacetelescope/asv/commit/b03a08fcff6407aec63aa327685750ee28072ebd
+
+We should copy this, and make sure it's working before we start to do
+any serious work.

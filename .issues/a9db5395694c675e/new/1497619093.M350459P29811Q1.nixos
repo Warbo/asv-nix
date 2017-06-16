@@ -1,0 +1,8 @@
+From: Chris Warburton
+Date: Fri, 16 Jun 2017 14:17:08 +0100
+State: new
+Subject: Make Nix file with airspeed velocity available
+Message-Id: <a9db5395694c675e-0-artemis@nixos>
+
+We need to make an airspeed velocity plugin; to test it, we'll need asv
+available. Make sure we can get it.
