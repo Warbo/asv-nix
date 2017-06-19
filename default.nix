@@ -3,20 +3,24 @@
 with rec {
   raw = pythonPackages.buildPythonPackage {
     name = "asv-nix";
-    src  = ./.;
+    src  = ./python;
   };
 
   example = stdenv.mkDerivation (withNix {
     inherit exampleConf machineConf;
-    name = "asv-nix-example";
+    name        = "asv-nix-example";
     buildInputs = [ asv git raw ];
 
     buildCommand = ''
+      source $stdenv/setup
+
+      echo "Making dummy asv machine" 1>&2
       mkdir home
       export HOME="$PWD/home"
       cp "$machineConf" "$HOME/.asv-machine.json"
       chmod +w "$HOME/.asv-machine.json"
 
+      echo "Making dummy git repo" 1>&2
       mkdir test-repo
       pushd test-repo
         git config --global user.email "you@example.com"
@@ -26,11 +30,30 @@ with rec {
         git add bar
         git commit -m "Initial commit"
 
-        yes | asv quickstart || true
+        echo "Setting up asv in repo" 1>&2
+        echo "y" | asv quickstart
         cp "$exampleConf" asv.conf.json
+
+        echo "Running dummy asv benchmarks" 1>&2
         asv run
+
+        python "${writeScript "debug.py" ''
+          from asv import util
+          from asv import config
+          from asv import graph
+          c = config.Config.load()
+          g = graph.GraphSet()
+          g.get_graph('nix-2.7-706b673a206275696c74696e732e6765744174747220706b672028696d706f7274203c6e6978706b67733e207b7d29-22707974686f6e22-5f3a2028696d706f7274203c6e6978706b67733e207b7d292e707974686f6e-6e756c6c',
+            { "pkg: builtins.getAttr pkg (import <nixpkgs> {})": "python",
+              "_: (import <nixpkgs> {}).python": "null" })
+          g.save(c.html_dir)
+        ''}"
+        find "$PWD"
+        echo "Generating dummy output" 1>&2
+        asv publish
+
+        cp -r .asv/html "$out"
       popd
-      exit 1
     '';
   });
 
@@ -42,6 +65,12 @@ with rec {
 
         // The actual plugin for using Nix
         "plugins": [ "asv_nix" ],
+
+        // Named functions used to build Nix-based dependencies
+        "builders": {
+          "python": "_: (import <nixpkgs> {}).python",
+          "pkgStr": "str: builtins.getAttr str (import <nixpkgs> {})",
+        },
 
         // The name of the project being benchmarked
         "project": "test-example",
@@ -64,17 +93,17 @@ with rec {
         // package (in PyPI) and the values are version numbers.  An empty
         // list or empty string indicates to just test against the default
         // (latest) version. null indicates that the package is to not be
-        // installed. If the package to be tested is only available from
-        // PyPi, and the 'environment_type' is conda, then you can preface
-        // the package name by 'pip+', and the package will be installed via
-        // pip (with all the conda available packages installed first,
-        // followed by the pip installed packages).
-        //
-        // "matrix": {
-        //     "numpy": ["1.6", "1.7"],
-        //     "six": ["", null],        // test with and without six installed
-        //     "pip+emcee": [""],   // emcee is only available for install with pip.
-        // },
+        // installed. If a name is prefixed with "nix+" it will be looked up as
+        // a key in the "builders" above; the resulting Nix function will be
+        // called with each 'version' as an argument. You should ensure that one
+        // of these provides a python executable, since it's needed for running
+        // the benchmarks (we don't provide one by default, since it may
+        // conflict with a desired override).
+
+        "matrix": {
+            "nix+python": ["null"],
+            "nix+pkgStr": ["\"bash\"", "\"python\""],
+        },
 
         // Combinations of libraries/python versions can be excluded/included
         // from the set to test. Each entry is a dictionary containing additional
