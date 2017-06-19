@@ -1,0 +1,8 @@
+From: Chris Warburton
+Date: Mon, 19 Jun 2017 23:01:38 +0100
+Subject: Re: Flesh out plugin for Nix
+Message-Id: <b3e6bb5944a9dfae-d03abcab793e2c9a-artemis@nixos>
+References: <b3e6bb5944a9dfae-0-artemis@nixos>
+In-Reply-To: <b3e6bb5944a9dfae-0-artemis@nixos>
+
+Closing since the functionality's basically there, modulo bugs

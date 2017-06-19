@@ -1,8 +1,9 @@
 From: Chris Warburton
 Date: Fri, 16 Jun 2017 14:19:30 +0100
-State: new
+State: resolved
 Subject: Flesh out plugin for Nix
 Message-Id: <b3e6bb5944a9dfae-0-artemis@nixos>
+resolution: fixed
 
 Our environment plugin should use Nix to get set up the required
 environments.

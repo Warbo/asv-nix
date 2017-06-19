@@ -1,0 +1,8 @@
+From: Chris Warburton
+Date: Mon, 19 Jun 2017 23:03:43 +0100
+State: new
+Subject: Permission denied during publish
+Message-Id: <b06e2cbe046cda1b-0-artemis@nixos>
+
+Example used during test gets permission denied error when trying to
+mkdir the .asv/html/graphs directory during build.
