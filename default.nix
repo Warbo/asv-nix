@@ -3,7 +3,7 @@
 with rec {
   raw = pythonPackages.buildPythonPackage {
     name = "asv-nix";
-    src  = ./.;
+    src  = ./python;
   };
 
   example = stdenv.mkDerivation (withNix {
