@@ -1,0 +1,9 @@
+From: Chris Warburton
+Date: Mon, 19 Jun 2017 14:22:18 +0100
+Subject: Re: Test that asv example env plugin works
+Message-Id: <a3d479ae5f8a58b8-8d237f32a44b8214-artemis@nixos>
+References: <a3d479ae5f8a58b8-0-artemis@nixos>
+In-Reply-To: <a3d479ae5f8a58b8-0-artemis@nixos>
+
+We actually went straight ahead and adapted the example plugin, and it
+works :)

@@ -1,8 +1,9 @@
 From: Chris Warburton
 Date: Fri, 16 Jun 2017 14:18:26 +0100
-State: new
+State: resolved
 Subject: Test that asv example env plugin works
 Message-Id: <a3d479ae5f8a58b8-0-artemis@nixos>
+resolution: fixed
 
 asv's test suite comes with an example environment plugin:
 
