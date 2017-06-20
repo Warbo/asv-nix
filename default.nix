@@ -5,6 +5,7 @@ with rec {
   raw = pythonPackages.buildPythonPackage (withNix {
     name = "asv-nix";
     src  = ./python;
+    propagatedBuildInputs = [ asv ];
   });
 
   exampleConf = writeScript "asv.conf.json" (toJSON {
