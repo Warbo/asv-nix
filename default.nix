@@ -1,4 +1,4 @@
-{ asv, git, pythonPackages, runCommand, stdenv, which, withNix, writeScript }:
+{ asv, git, pythonPackages, stdenv, withNix, writeScript }:
 
 with builtins;
 with rec {
@@ -6,10 +6,6 @@ with rec {
     name = "asv-nix";
     src  = ./python;
     propagatedBuildInputs = [ asv ];
-    postInstall = ''
-      mkdir -p "$out/bin"
-      ln -s "$(command -v asv)" "$out/bin/asv"
-    '';
   });
 
   exampleConf = writeScript "asv.conf.json" (toJSON {
@@ -132,17 +128,8 @@ with rec {
       [[ -e "$out" ]] || echo "pass" > "$out"
     '';
   });
-
-  propagateCheck = runCommand "propagate-check"
-    {
-      buildInputs = [ raw which ];
-    }
-    ''
-      which asv && echo "pass" > "$out"
-    '';
 };
 raw.override (old: {
   # Forces example to be checked first
   inherit example;
-  inherit propagateCheck;
 })
