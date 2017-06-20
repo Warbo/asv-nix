@@ -16,10 +16,11 @@ with rec {
     # The actual plugin for using Nix
     plugins = [ "asv_nix" ];
 
-    # Named functions used to build Nix-based dependencies
+    # Named functions used to build Nix-based dependencies. The first argument
+    # is the project directory path, the second is the "version" to use.
     builders = {
-      python = "_: (import <nixpkgs> {}).python";
-      pkgStr = "str: builtins.getAttr str (import <nixpkgs> {})";
+      python = "_: _: (import <nixpkgs> {}).python";
+      pkgStr = "_: str: builtins.getAttr str (import <nixpkgs> {})";
     };
 
     # The name of the project being benchmarked

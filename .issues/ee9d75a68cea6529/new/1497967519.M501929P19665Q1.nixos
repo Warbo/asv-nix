@@ -1,0 +1,9 @@
+From: Chris Warburton
+Date: Tue, 20 Jun 2017 15:04:52 +0100
+Subject: Re: Run in env
+Message-Id: <ee9d75a68cea6529-bf684ac05be133a1-artemis@nixos>
+References: <ee9d75a68cea6529-0-artemis@nixos>
+In-Reply-To: <ee9d75a68cea6529-0-artemis@nixos>
+
+We now use nix-shell to run benchmarks. Adds a bunch of overhead, but we
+can cross that bridge when we come to it.
