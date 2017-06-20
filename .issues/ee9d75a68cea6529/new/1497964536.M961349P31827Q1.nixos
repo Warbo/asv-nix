@@ -1,8 +1,9 @@
 From: Chris Warburton
 Date: Tue, 20 Jun 2017 14:14:18 +0100
-State: new
+State: resolved
 Subject: Run in env
 Message-Id: <ee9d75a68cea6529-0-artemis@nixos>
+resolution: fixed
 
 We currently use the env to pick a bin/python interpreter, and assume
 everything else is handled via makeWrapper. That's WorseIsBetter. We
