@@ -1,0 +1,15 @@
+From: Chris Warburton
+Date: Tue, 20 Jun 2017 02:17:51 +0100
+State: new
+Subject: Put out symlinks in env dir
+Message-Id: <8162a77b378b70d1-0-artemis@nixos>
+
+asv's other plugins, like virtualenv, use an "env" dir to store their
+environments. Ours are automatically kept in the Nix store, which is
+nice, but we should probably also put the "out links" from nix-build in
+this env dir, so they act as garbage collector roots.
+
+At the moment we're using "--no-out-link", which at least prevents a
+buildup of "result.X" links. We should just use the same naming
+convention as virtualenv and friends, i.e. using the environment's
+"name" attribute.
