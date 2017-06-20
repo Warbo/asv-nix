@@ -1,7 +1,9 @@
-from asv.environment import Environment
-from asv.console     import log
-from os              import path
-from subprocess      import check_output, list2cmdline
+from   asv.environment import Environment
+from   asv.console     import log
+from   asv             import util
+from   json            import dumps
+from   os              import path, getcwd
+from   subprocess      import check_output, list2cmdline
 
 class NixEnvironment(Environment):
     tool_name = "nix"
@@ -24,10 +26,17 @@ class NixEnvironment(Environment):
         self._python       = python
         self._requirements = requirements
 
+        # Sanity checks
         for key in self._requirements:
             if not key.startswith("nix+"):
                 raise NotImplementedError(
                     'TODO: Only requirements beginning with "nix+" supported')
+
+        from distutils import spawn
+        if spawn.find_executable("nix-shell") is None:
+            raise Exception("Couldn't find nix-shell")
+        if spawn.find_executable("nix-build") is None:
+            raise Exception("Couldn't find nix-build")
 
         super(NixEnvironment, self).__init__(conf, python, requirements)
 
@@ -37,8 +46,13 @@ class NixEnvironment(Environment):
         dictionary of arguments which the expression should be called with.
         This is suitable for nix-build's -E, or nix-shell's -p.
         """
+
+        cwd   = dumps(getcwd())
+
         paths = "[{0}]".format(
-            ' '.join(["(({0}) ({1}))".format(self._builders[key[4:]], arg)
+            ' '.join(['(({0}) {1} ({2}))'.format(self._builders[key[4:]],
+                                                 cwd,
+                                                 arg)
                       for (key, arg) in self._requirements.items()]))
 
         func = '(import <nixpkgs> {}).buildEnv'
@@ -82,13 +96,10 @@ class NixEnvironment(Environment):
         #exe = path.join(self._envdir, 'bin', 'python')
         cmd = list2cmdline(['python'] + args)
 
+        shell = ['nix-shell', '--show-trace', '--pure',
+                 '--run', cmd,
+                 '-p', self._expr()]
+
         log.info("Running '{0}' in {1}".format(cmd, self.name))
 
-        #if self._envdir is None:
-        #    raise NotImplementedError('Not yet set up env dir')
-        log.info('About to run: {0}'.format(repr(('nix-shell',
-            ['--pure', '--run', cmd, '-p', self._expr()]))))
-        return self.run_executable(
-            'nix-shell',
-            ['--show-trace', '--pure', '--run', cmd, '-p', self._expr()],
-            **kwargs)
+        return util.check_output(shell, **kwargs)
