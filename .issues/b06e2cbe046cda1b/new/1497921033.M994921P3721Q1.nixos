@@ -1,0 +1,14 @@
+From: Chris Warburton
+Date: Tue, 20 Jun 2017 01:43:44 +0100
+Subject: Re: Permission denied during publish
+Message-Id: <b06e2cbe046cda1b-975d0ed57ed221f4-artemis@nixos>
+References: <b06e2cbe046cda1b-0-artemis@nixos>
+In-Reply-To: <b06e2cbe046cda1b-0-artemis@nixos>
+
+The problem was that 'asv publish' makes its html output by copying a
+'template' directory, then filling in the data; yet this template was
+read-only, since we're getting it from the Nix store. Hence we're not
+allowed to fill in the data, and we get this permission denied error.
+
+Currently worked around in a nix-config patch, sent upstream to
+https://github.com/spacetelescope/asv/pull/521
