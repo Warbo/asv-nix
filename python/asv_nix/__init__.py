@@ -1,7 +1,7 @@
 from asv.environment import Environment
 from asv.console     import log
 from os              import path
-from subprocess      import check_output
+from subprocess      import check_output, list2cmdline
 
 class NixEnvironment(Environment):
     tool_name = "nix"
@@ -31,24 +31,31 @@ class NixEnvironment(Environment):
 
         super(NixEnvironment, self).__init__(conf, python, requirements)
 
+    def _expr(self):
+        """
+        Returns a Nix expression for building this environment, along with a
+        dictionary of arguments which the expression should be called with.
+        This is suitable for nix-build's -E, or nix-shell's -p.
+        """
+        paths = "[{0}]".format(
+            ' '.join(["(({0}) ({1}))".format(self._builders[key[4:]], arg)
+                      for (key, arg) in self._requirements.items()]))
+
+        func = '(import <nixpkgs> {}).buildEnv'
+        args = 'name = {0}; paths = {1};'.format('"' + self.name + '"',
+                                                 paths)
+
+        return func + ' { ' + args + ' }'
+
     def _setup(self):
         """
         Setup the environment on disk using nix.
         """
         log.info('Building Nix environment')
 
-        paths = "[{0}]".format(
-            ' '.join(["(({0}) ({1}))".format(self._builders[key[4:]], arg)
-                      for (key, arg) in self._requirements.items()]))
-
-        log.info("Including paths: {0}".format(repr(paths)))
-
-        self._envdir = check_output([
-            "nix-build", "--no-out-link",
-            "--argstr", "name",  self.name,
-            "--arg",    "paths", paths,
-            "-E",       '(import <nixpkgs> {}).buildEnv'
-        ]).strip()
+        self._envdir = check_output(
+            ["nix-build", "--show-trace", "--no-out-link", "-E", self._expr()]
+        ).strip()
         log.info('Created environment at {0}'.format(self._envdir))
 
     # Nix projects may not fit asv's assumptions about setup.py, etc. so we make
@@ -70,15 +77,18 @@ class NixEnvironment(Environment):
 
     def run(self, args, **kwargs):
         """
-        Run the python executable from our environment. This should work as a
-        standalone executable, since the appropriate environment (PATH,
-        PYTHON_PATH, etc.) should have been set via makeWrapper.
+        Run the python executable from our environment.
         """
-        exe = path.join(self._envdir, 'bin', 'python')
+        #exe = path.join(self._envdir, 'bin', 'python')
+        cmd = list2cmdline(['python'] + args)
 
-        log.info("Running '{0}' in {1}".format(' '.join([exe] + args),
-                                               self.name))
+        log.info("Running '{0}' in {1}".format(cmd, self.name))
 
-        if self._envdir is None:
-            raise NotImplementedError('Not yet set up env dir')
-        return self.run_executable(exe, args, **kwargs)
+        #if self._envdir is None:
+        #    raise NotImplementedError('Not yet set up env dir')
+        log.info('About to run: {0}'.format(repr(('nix-shell',
+            ['--pure', '--run', cmd, '-p', self._expr()]))))
+        return self.run_executable(
+            'nix-shell',
+            ['--show-trace', '--pure', '--run', cmd, '-p', self._expr()],
+            **kwargs)
