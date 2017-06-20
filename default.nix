@@ -105,7 +105,7 @@ with rec {
   example = stdenv.mkDerivation (withNix {
     inherit exampleConf machineConf;
     name        = "asv-nix-example";
-    buildInputs = [ asv git raw ];
+    buildInputs = [ git raw ];
     src         = testSetup;
 
     unpackPhase = "true";
