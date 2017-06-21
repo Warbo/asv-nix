@@ -1,0 +1,16 @@
+From: Chris Warburton
+Date: Wed, 21 Jun 2017 21:51:57 +0100
+State: new
+Subject: Install/uninstall commits in env
+Message-Id: <9c3c52dc90dec14f-0-artemis@nixos>
+
+Allow different commits to be "installed"/"uninstalled" to an
+environment.
+
+The environment contains the dependencies (as specified in 'matrix' and
+implemented in 'builders'). The project being benchmarked can be
+"installed" from a particular commit.
+
+asv assumes that the project is a Python package, and hence the
+benchmark scripts just need to import them. We might as well do the
+same.
