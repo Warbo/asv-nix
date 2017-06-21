@@ -1,0 +1,13 @@
+From: Chris Warburton
+Date: Tue, 20 Jun 2017 17:22:11 +0100
+Subject: Re: Put out symlinks in env dir
+Message-Id: <8162a77b378b70d1-fe975db2b438a97f-artemis@nixos>
+References: <8162a77b378b70d1-0-artemis@nixos>
+In-Reply-To: <8162a77b378b70d1-0-artemis@nixos>
+
+Maybe we could use the 'shell.drv' trick? Depends on how fast it is to
+instantiate.
+
+What we really want is something like:
+
+    makeWrapper "${bash}/bin/bash" --set PATH ... --set PYTHONPATH ...

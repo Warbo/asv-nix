@@ -121,6 +121,9 @@ with rec {
         echo "Generating dummy output" 1>&2
         asv publish
 
+        asv run
+        asv publish
+
         cp -r .asv/html "$out"
       popd
     '';
