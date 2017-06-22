@@ -1,0 +1,173 @@
+# Nix Plugin for Airspeed Velocity #
+
+## About Airspeed Velocity ##
+
+Airspeed Velocity (asv) is a benchmarking tool for Python. Its features include:
+
+ - Measuring CPU time, wallclock time, peak memory usage, or any numeric value.
+ - Integration with version control, e.g. to benchmark a range of git commits.
+ - Measuring with different dependencies (e.g. alternative libraries).
+ - Measuring on different machines.
+ - Generating HTML reports, with graphs, step-detection, etc.
+ - Running benchmarks in isolated environments.
+
+All of this is very nice, but this last feature is rather tricky. There is a
+plugin mechanism for defining environments, and plugins are provided for
+virtualenv, conda and a "dummy" plugin which uses the system's installed
+packages.
+
+This is a bit unfortunate for two reasons:
+
+ - These plugins can only manage dependencies which are Python packages. If a
+   project requires non-Python dependencies, they'll have to be hacked in using
+   setup/teardown functions or similar.
+ - This limitation on dependencies prevents asv from being used (to its full
+   extent, at least) on non-Python projects. Even if we write our benchmarks in
+   Python, e.g. using `subprocess` to call out to our "real" project, that just
+   turns our "real" project into a dependency of the benchmarks (as the previous
+   point states) such dependencies can't be managed unless they're Python
+   packages.
+
+If we solve the first problem, we've automatically solved the second. That's
+what this project tries to do.
+
+## About Nix ##
+
+Nix is a build/packaging system which is very powerful and modular. Packages can
+be defined using a Turing-complete, pure functional, lazily evaluated, domain
+specific programming language. Every package is built in isolation, the results
+are cached along with the hashes of all inputs, and only rebuilt if some input
+changes.
+
+Rather than defining packages directly, it's common to write a bunch of helper
+functions and define a package in terms of those. The 'nixpkgs' repository
+contains a large collection of packages and helper functions, for example
+`buildPythonPackage` which takes care of Python-specific tasks like setting
+module directories, or `haskellPackages.mkDerivation` which handles tasks
+specific to Haskell projects. This flexibility makes Nix usable for almost any
+project in any programming language.
+
+## About This Plugin ##
+
+This project provides an asv plugin, which uses Nix to manage dependencies
+instead of conda or virtualenv. The architecture of asv is understandably a
+little Python-centric, so we take a few liberties in our configuration to make
+using Nix more seamless.
+
+## Using The Plugin ##
+
+To run a benchmark, you'll need a Python package with both `asv` and this plugin
+installed as modules. You could do this using `pip`, `apt-get`, etc. but we
+might as well use Nix: the `default.nix` file defines a Nix package for this
+plugin. It depends on an `asv` package, but at the time of writing `nixpkgs`
+doesn't include one. The `shell.nix` file has instructions to fetch one, so you
+should be able to just run `nix-shell` and be dropped into an environment with
+both `asv` and this plugin available.
+
+Most of the asv instructions apply as normal, so we won't cover them here.
+Instead, we'll highlight the aspects which are unique to the Nix plugin.
+
+To benchmark a project, you'll need an `asv.conf.json` file. You can use
+`asv quickstart` to generate one, and follow the `asv` documentation for setting
+the fields. The settings which are specific to the Nix plugin are as follows:
+
+ - `plugins`: This tells asv what Python modules to import for plugins. You
+   should make sure `"asv_nix"` is included. For example:
+
+       "plugins": [ "asv_nix" ]
+
+ - `environment_type`: This tells asv how it should build the environment that
+   the benchmarks will be run in. Use the value `"nix"`. For example:
+
+       "environment_type": "nix"
+
+ - `matrix`: This tells asv which versions of which dependencies to include in
+   the environment. It is an object where each property names a dependency, and
+   each value is a list of "versions" for that dependency to benchmark. For
+   example if the dependencies are `{"a": [ 1, 2, 3 ], "b": [ 7 ]}` then the
+   benchmarks will be run with in an environment with `a` version 1 and `b`
+   version 7, then again in an environment with `a` version 2 and `b` version 7,
+   and again in an environment with `a` version 3 and `b` version 7.
+
+   In normal `asv` projects, these dependencies are Python packages. Since Nix
+   is more general, we add a layer of indirection: each dependency name is a key
+   for the `builders` object described below. Each "version" is a string
+   containing a Nix expression, which will be passed as an argument to that
+   "builder".
+
+   For example, here are two ways we might specify a package to use: `python`
+   explicitly imports `nixpkgs` and projects out the desired package attribute;
+   `shell` just gives a string of the attribute's name (Nix strings can use `"`
+   or `''`); `myLib` seems to be specifying git revisions:
+
+       "matrix": {
+         "python": ["(import <nixpkgs> {}).python2",
+                    "(import <nixpkgs> {}).python3",
+                    "(import <nixpkgs> {}).pypy" ],
+        "shell":  ["''bash''", "''dash''", "''zsh''" ],
+         "myLib":  ["''42db882''", "''2ddf9fe''"]
+       }
+
+ - `builders`: This property isn't part of a standard `asv` project. It defines,
+   for each dependency, a Nix expression for building it. The keys correspond to
+   those used in `matrix`. The values should be strings containing a Nix
+   expression, which should be a function taking a set of two arguments:
+   `version`, which comes from the `matrix` entry; and `dir`, which is the path
+   to the benchmarks' root directory. The latter is useful when we want to write
+   large Nix expressions in a separate file and have the configuration import
+   them. Note that `dir` is the root of the *benchmarking project*; this isn't
+   necessarily the *project being benchmarked*, since asv allows benchmarks to
+   be managed separately.
+
+   Continuing the example from `matrix`, we might have these implementations:
+   Since `python` passes in a package for each "version", the implementation can
+   just return them as-is; `shell` only provides names, so its implementation
+   must look them up. `myLib` uses `dir` to import a Nix expression from disk,
+   and passes on the given `version`.
+
+       "builders": {
+         "python": "args.version,
+         "shell":  "args: builtins.getAttr args.version (import <nixpkgs> {})",
+         "myLib":  "args: import args.dir { inherit (args) version; }"
+       }
+
+ - `installer`: This is another Nix-specific property. It is a string containing
+   a Nix expression, which will build the whole benchmark environment. It should
+   be a function accepting a set containing all of the dependencies (so `shell`,
+   `python` and `myLib` in the above example), as well as `root` which is the
+   path to the root directory of the project being benchmarked (i.e. this is the
+   *opposite* of the `dir` argument for builders). Importantly, the contents of
+   `root` will change as different versions (e.g. git commits) of the project
+   are benchmarked.
+
+   The result of this function should include a `bin/python` executable, which
+   will be used to run the benchmarks. Presumably, you will want other programs,
+   environment variables, etc. to be set during the benchmark's execution; the
+   standard way to do this is to "wrap" the python executable, e.g. using
+   `makeWrapper` from `nixpkgs`, or some similar mechanism.
+
+   For example:
+
+       "installer": "args: with import <nixpkgs> {};
+                           with {
+                             pkg = callPackage args.root { shell = args.shell; };
+                           };
+                           runCommand ''bench-env''
+                             {
+                               inherit pkg;
+                               inherit (args) python;
+                               buildInputs = [ makeWrapper ];
+                             }
+                             ''
+                               mkdir -p $out/bin
+                               makeWrapper $python/bin/python $out/bin/python \
+                                 --prefix PATH : $pkg/bin
+                                 --set    MYLIB $myLib
+                             ''"
+
+  More likely, we'll write expressions like these in a file and either have the
+  `installer` import them from `root`, or have a `builder` import them from
+  `dir`.
+
+To see a working example, take a look at `example.nix`, which is used as a test
+during installation.

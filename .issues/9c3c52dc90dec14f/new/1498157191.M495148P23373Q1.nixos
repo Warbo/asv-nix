@@ -1,0 +1,8 @@
+From: Chris Warburton
+Date: Thu, 22 Jun 2017 19:46:13 +0100
+Subject: Re: Install/uninstall commits in env
+Message-Id: <9c3c52dc90dec14f-f0639c63240ee83c-artemis@nixos>
+References: <9c3c52dc90dec14f-0-artemis@nixos>
+In-Reply-To: <9c3c52dc90dec14f-0-artemis@nixos>
+
+Commits are now testable individually.
