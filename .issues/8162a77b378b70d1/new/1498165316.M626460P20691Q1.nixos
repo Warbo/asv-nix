@@ -1,0 +1,9 @@
+From: Chris Warburton
+Date: Thu, 22 Jun 2017 22:01:32 +0100
+Subject: Re: Put out symlinks in env dir
+Message-Id: <8162a77b378b70d1-fb0f05d442cf5d38-artemis@nixos>
+References: <8162a77b378b70d1-0-artemis@nixos>
+In-Reply-To: <8162a77b378b70d1-0-artemis@nixos>
+
+We now store the garbage collector root for every combination of commit
+and environment.
