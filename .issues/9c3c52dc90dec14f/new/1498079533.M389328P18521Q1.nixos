@@ -1,8 +1,9 @@
 From: Chris Warburton
 Date: Wed, 21 Jun 2017 21:51:57 +0100
-State: new
+State: resolved
 Subject: Install/uninstall commits in env
 Message-Id: <9c3c52dc90dec14f-0-artemis@nixos>
+resolution: fixed
 
 Allow different commits to be "installed"/"uninstalled" to an
 environment.
