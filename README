@@ -81,6 +81,23 @@ the fields. The settings which are specific to the Nix plugin are as follows:
 
        "environment_type": "nix"
 
+ - `env_dir`: This tells asv where to store environments, so they don't have to
+   be rebuilt from scratch. The Nix plugin extends this by including a "garbage
+   collector root" at this path *inside each environment*. This prevents Nix
+   from deleting the environment when its garbage collector runs. Deleting these
+   roots (symlinks) will cause the environments to be garbage collected. You can
+   also just delete the entire contents of `env_dir` if you need to.
+
+   For example:
+
+       "env_dir": ".asv/env"
+
+   This will tell `asv` to make a directory `.asv/env` in the benchmarking
+   project's directory. Each commit of the project being benchmarked will be put
+   in its own directory in here; and *inside each of those* will be *another*
+   `.asv/env` directory, containing a garbage collector root for each set of
+   dependencies that commit has been benchmarked with.
+
  - `matrix`: This tells asv which versions of which dependencies to include in
    the environment. It is an object where each property names a dependency, and
    each value is a list of "versions" for that dependency to benchmark. For

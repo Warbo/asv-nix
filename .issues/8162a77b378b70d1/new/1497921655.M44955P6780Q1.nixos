@@ -1,8 +1,9 @@
 From: Chris Warburton
 Date: Tue, 20 Jun 2017 02:17:51 +0100
-State: new
+State: resolved
 Subject: Put out symlinks in env dir
 Message-Id: <8162a77b378b70d1-0-artemis@nixos>
+resolution: fixed
 
 asv's other plugins, like virtualenv, use an "env" dir to store their
 environments. Ours are automatically kept in the Nix store, which is

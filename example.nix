@@ -160,6 +160,7 @@ stdenv.mkDerivation (withNix {
       echo "Generating dummy output" 1>&2
       asv publish
 
+      echo "Repeating, to ensure files can be updated (not read-only)" 1>&2
       asv run
       asv publish
 
