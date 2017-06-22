@@ -21,14 +21,17 @@ class NixEnvironment(Environment):
 
         # User-provided Nix expressions, for building the dependencies and
         # project, respectively
-        self._builders     = conf.builders
-        self._installer    = conf.installer
+        self._builders  = conf.builders
+        self._installer = conf.installer
 
         # This will be set to a Nix build result after "install"
-        self._envdir       = None
+        self._outdir = None
+
+        # We put Nix "out links" here, to avoid garbage collecting environments
+        self._envdir = conf.env_dir
 
         # Required by asv, but unused since "installer" will provide Python
-        self._python       = ''
+        self._python = ''
 
         # The arguments for each builder
         self._requirements = requirements
@@ -76,20 +79,22 @@ class NixEnvironment(Environment):
 
     def install(self, package):
         # Build the checked-out project and its dependencies
-        self._envdir = util.check_output(
-            ['nix-build', '--show-trace', '--no-out-link', '-E', self._expr()],
+        self._outdir = util.check_output(
+            ['nix-build', '--show-trace',
+             '-o', path.join(self._envdir, self.name.replace('/', '_')),
+             '-E', self._expr()],
             cwd=self._build_root
         ).strip()
 
     def uninstall(self, package):
-        self._envdir = None
+        self._outdir = None
 
     def run(self, args, **kwargs):
         """
         Run the python executable from our environment.
         """
-        if self._envdir is None:
-            raise Exception('Cannot run without env dir')
+        if self._outdir is None:
+            raise Exception('Cannot run without out dir')
 
         return util.check_output(
-            [path.join(self._envdir, 'bin', 'python')] + args, **kwargs)
+            [path.join(self._outdir, 'bin', 'python')] + args, **kwargs)
