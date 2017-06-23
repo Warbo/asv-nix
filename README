@@ -67,6 +67,78 @@ both `asv` and this plugin available.
 Most of the asv instructions apply as normal, so we won't cover them here.
 Instead, we'll highlight the aspects which are unique to the Nix plugin.
 
+### Quick Start ###
+
+`asv` allows benchmarks to be managed separately to your project. That
+complicates things a little, so let's assume that your benchmarks live alongside
+your code. In your project repo's top-level directory, run `asv quickstart` to
+generate some example benchmarks and a config file.
+
+In your `asv.conf.json`, make sure `plugins` is set to `[ "asv_nix" ]` and
+`environment_type` is `"nix"`. Also set `builders` to `{}` and `matrix` to `{}`.
+
+The easiest way to specify your benchmarking environment is to define it using a
+Nix file. Let's make a file called `benchmarks.nix` in your project's root
+directory. For the sake of argument, we'll assume your project has a
+`default.nix` which defines a package containing some binaries in `bin/`. The
+following `benchmarks.nix` file will provide a `python` executable, which has
+access to that `bin/` directory in its `PATH`:
+
+    args:
+    with import <nixpkgs> {};
+    with { pkg = callPackage args.root {}; };
+    runCommand "env" { buildInputs = [ makeWrapper ]; } ''
+      mkdir -p "$out/bin"
+      makeWrapper "${python}/bin/python" "$out/bin/python" \
+        --prefix PATH : "${pkg}/bin"
+    ''
+
+Now we'll tell `asv` to use this as our environment. In our `asv.conf.json` we
+set `installer` to the following:
+
+    "args: import (args.root + ''/benchmarks.nix'') args"
+
+This should be everything we need to run the benchmarks, using `asv run`.
+However, there is an annoying problem: we're looking for `benchmarks.nix` in
+`root`, which is the version of the project that's checked out of version
+control. Hence we need to commit `benchmarks.nix` to the repo before it will be
+available; this isn't a good idea, since it forces us to commit changes before
+we've tested them, and different commits may end up being tested with different
+`benchmarks.nix` files, making comparisons unjustified.
+
+To improve this, we need to load `benchmarks.nix` from our working tree instead.
+We can do this by defining a "builder", since they're given the working tree as
+their `dir` argument.
+
+First, alter your `builders` attribute to the following:
+
+    { "myDep": "{ dir, version }: dir" }
+
+Now we need to specify a "version" to use; this can be an arbitrary Nix
+expression, and since we're ignoring it we might as well use `null`. Alter your
+`matrix` to be:
+
+    { "myDep": [ "null" ] }
+
+Now we need to make use of `myDep` in `installer`. Change your `installer` to:
+
+    "args: import (args.myDep + ''/benchmarks.nix'') args"
+
+Now this will read `benchmarks.nix` from the working tree (the `dir` value we
+returned from the `myDeps` builder), whilst `pkg` will still use the checked out
+copy (which is what we want to benchmark).
+
+If your needs are simple, this is enough to work with: just adjust the contents
+of `benchmarks.nix` (and rename/move the file) as appropriate to define an
+environment for your project. Alter the benchmarks as you like.
+
+The recommended way to access features of the environment from within a
+benchmark is to use environment variables (for data), or augment `PATH` (for
+programs). We use `makeWrapper` to do the latter in the above example; the same
+can be done for environment variables using the `--set` option.
+
+### Detailed Explanation ###
+
 To benchmark a project, you'll need an `asv.conf.json` file. You can use
 `asv quickstart` to generate one, and follow the `asv` documentation for setting
 the fields. The settings which are specific to the Nix plugin are as follows:
