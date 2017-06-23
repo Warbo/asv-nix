@@ -1,7 +1,10 @@
-{ git, raw, stdenv, withNix, writeScript }:
+{ git, raw, stdenv, writeScript }:
 
 with builtins;
 with rec {
+  # Allows Nix builders (like checkPhase) to run Nix commands (as asv-nix does)
+  inherit (import ./nix-config.nix) withNix;
+
   # Config files and setup scripts to create an example project for asv-nix
 
   exampleBench = writeScript "benchmarks.py" ''
