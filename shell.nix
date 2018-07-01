@@ -1,1 +1,2 @@
-(import ./nix-config.nix).callPackage ./. {}
+with { pkgs = import <nixpkgs> {}; };
+callPackage ./. (import ./helpers.nix { inherit pkgs; })
