@@ -79,12 +79,17 @@ class NixEnvironment(Environment):
 
     def install(self, package):
         # Build the checked-out project and its dependencies
-        self._outdir = util.check_output(
-            ['nix-build', '--show-trace',
-             '-o', path.join(self._envdir, self.name.replace('/', '_')),
-             '-E', self._expr()],
-            cwd=self._build_root
-        ).strip()
+        try:
+            self._outdir = util.check_output(
+                ['nix-build', '--show-trace',
+                 '-o', path.join(self._envdir, self.name.replace('/', '_')),
+                 '-E', self._expr()],
+                cwd=self._build_root
+            ).strip()
+        except ProcessError as e:
+            log('STDOUT\n' + e.stdout + '\nEND STDOUT\n')
+            log('STDERR\n' + e.stderr + '\nEND STDERR\n')
+            raise e
 
     def uninstall(self, package):
         self._outdir = None
