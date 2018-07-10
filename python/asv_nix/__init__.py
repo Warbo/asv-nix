@@ -86,9 +86,10 @@ class NixEnvironment(Environment):
                  '-E', self._expr()],
                 cwd=self._build_root
             ).strip()
-        except ProcessError as e:
-            log('STDOUT\n' + e.stdout + '\nEND STDOUT\n')
-            log('STDERR\n' + e.stderr + '\nEND STDERR\n')
+        except util.ProcessError as e:
+            import sys
+            sys.stderr.write('STDOUT\n' + e.stdout + '\nEND STDOUT\n')
+            sys.stderr.write('STDERR\n' + e.stderr + '\nEND STDERR\n')
             raise e
 
     def uninstall(self, package):
