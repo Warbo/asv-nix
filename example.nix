@@ -33,7 +33,7 @@ with rec {
     installer = ''
       args:
         with args.nixpkgs;
-        runCommand "wrap"
+        runCommand "wrapped-python"
           {
             inherit (args) python;
             foo = import args.root;
