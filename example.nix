@@ -1,4 +1,4 @@
-{ asv, git, raw, runCommand, withNix, writeScript }:
+{ git, pythonPackages, runCommand, withNix, writeScript }:
 
 with builtins;
 with rec {
@@ -35,13 +35,13 @@ with rec {
         with args.nixpkgs;
         runCommand "wrapped-python"
           {
-            inherit (args) python;
+            inherit (args) python3;
             foo = import args.root;
             buildInputs = [ makeWrapper ];
           }
           '''
             mkdir -p "$out/bin"
-            makeWrapper "$python"/bin/python "$out"/bin/python \
+            makeWrapper "$python3"/bin/python3 "$out"/bin/python \
               --prefix PATH : "$foo"/bin
           '''
     '';
@@ -140,7 +140,10 @@ with rec {
 runCommand "asv-nix-example"
   (withNix {
     inherit exampleBench exampleConf exampleNix machineConf;
-    buildInputs = [ asv git raw ];
+    buildInputs = [
+      git
+      (pythonPackages.python.withPackages (p: [ p.asv p.asv-nix ]))
+    ];
   })
   ''
     "${testSetup}"
