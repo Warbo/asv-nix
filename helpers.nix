@@ -8,7 +8,7 @@
 
   packages = pkgs.warbo-packages or import (pkgs.fetchgit {
     url    = http://chriswarbo.net/git/warbo-packages.git;
-    rev    = "c2ea27d";
-    sha256 = "04aif1s3cxk27nybsxp571fmvswy5vbw0prq67y108sb49mm3288";
   });
+    rev    = "773c523";
+    sha256 = "0q89iczdj1gw2s4facpd23kh31w2xfvkdzcb0njwzg2d7pysmpni";
 }
