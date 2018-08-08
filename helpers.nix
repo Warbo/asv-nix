@@ -2,9 +2,9 @@
 {
   helpers = pkgs.nix-helpers or import (pkgs.fetchgit {
     url    = http://chriswarbo.net/git/nix-helpers.git;
-    rev    = "3354810";
-    sha256 = "0xzv515v68hspps6q8hbf1y7lsamp2bdkkp7rk94f6722mmjihwa";
   });
+    rev    = "ed8379a";
+    sha256 = "1ifyz49x9ck3wkfw3r3yy8s0vcknz937bh00033zy6r1a2alg54g";
 
   packages = pkgs.warbo-packages or import (pkgs.fetchgit {
     url    = http://chriswarbo.net/git/warbo-packages.git;
