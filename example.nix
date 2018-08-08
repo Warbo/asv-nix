@@ -1,4 +1,4 @@
-{ git, raw, stdenv, withNix, writeScript }:
+{ git, raw, runCommand, withNix, writeScript }:
 
 with builtins;
 with rec {
@@ -137,15 +137,13 @@ with rec {
   '';
 };
 
-stdenv.mkDerivation (withNix {
-  inherit exampleBench exampleConf exampleNix machineConf;
-  name        = "asv-nix-example";
-  buildInputs = [ git raw ];
-  src         = testSetup;
-
-  unpackPhase = "true";
-  doCheck     = true;
-  checkPhase  = ''
+runCommand "asv-nix-example"
+  (withNix {
+    inherit exampleBench exampleConf exampleNix machineConf;
+    buildInputs = [ git raw ];
+    src         = testSetup;
+  })
+  ''
     "$src"
     export HOME="$PWD/home"
     pushd test-repo
@@ -166,9 +164,6 @@ stdenv.mkDerivation (withNix {
 
       cp -r .asv/html "$out"
     popd
-  '';
 
-  installPhase = ''
     [[ -e "$out" ]] || echo "pass" > "$out"
-  '';
-})
+  ''
