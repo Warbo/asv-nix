@@ -38,8 +38,8 @@ with rec {
   inherit pythonPackageOverrides;
 
   # Expose asv-nix (and asv, if not found) as standalone packages
-  inherit (pythonWithOverrides.pythonPackages) asv-nix;
-  asv = super.asv or pythonWithOverrides.pythonPackages.asv;
+  inherit (pythonWithOverrides.pkgs) asv-nix;
+  asv = super.asv or pythonWithOverrides.pkgs.asv;
 
   # Also provide a self-contained asv and asv-nix Python binary
   asv-nix-env = pythonWithOverrides.withPackages (p: [
