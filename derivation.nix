@@ -5,11 +5,10 @@ with rec {
   raw = pythonPackages.buildPythonPackage {
     name = "asv-nix";
     src  = ./python;
-    propagatedBuildInputs = [ asv ];
   };
 
   # Constructs an example project and tests that everything hooks together
-  example = callPackage ./example.nix { inherit raw withNix; };
+  example = callPackage ./example.nix { inherit asv raw withNix; };
 };
 
 # Export the Python package, but add the example as a dependency so that the
