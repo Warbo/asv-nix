@@ -1,4 +1,4 @@
-{ git, raw, runCommand, withNix, writeScript }:
+{ asv, git, raw, runCommand, withNix, writeScript }:
 
 with builtins;
 with rec {
@@ -140,7 +140,7 @@ with rec {
 runCommand "asv-nix-example"
   (withNix {
     inherit exampleBench exampleConf exampleNix machineConf;
-    buildInputs = [ git raw ];
+    buildInputs = [ asv git raw ];
     src         = testSetup;
   })
   ''
