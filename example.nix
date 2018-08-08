@@ -141,10 +141,9 @@ runCommand "asv-nix-example"
   (withNix {
     inherit exampleBench exampleConf exampleNix machineConf;
     buildInputs = [ asv git raw ];
-    src         = testSetup;
   })
   ''
-    "$src"
+    "${testSetup}"
     export HOME="$PWD/home"
     pushd test-repo
       echo "Running dummy asv benchmarks" 1>&2
