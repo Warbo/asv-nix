@@ -1,14 +1,14 @@
 { pkgs ? import <nixpkgs> {} }:
 {
-  helpers = pkgs.nix-helpers or (import (pkgs.fetchgit {
-    url    = http://chriswarbo.net/git/nix-helpers.git;
-    rev    = "ed8379a";
-    sha256 = "1ifyz49x9ck3wkfw3r3yy8s0vcknz937bh00033zy6r1a2alg54g";
+  helpers = pkgs.nix-helpers or (import (builtins.fetchGit {
+    url = http://chriswarbo.net/git/nix-helpers.git;
+    ref = "master";
+    rev = "12ae13b1bb28d891f2cf54e0a9c34f7f2caf5b88";
   }));
 
-  packages = pkgs.warbo-packages or (import (pkgs.fetchgit {
-    url    = http://chriswarbo.net/git/warbo-packages.git;
-    rev    = "773c523";
-    sha256 = "0q89iczdj1gw2s4facpd23kh31w2xfvkdzcb0njwzg2d7pysmpni";
+  packages = pkgs.warbo-packages or (import (builtins.fetchGit {
+    url = http://chriswarbo.net/git/warbo-packages.git;
+    ref = "master";
+    rev = "3d2187ef874ba62275d43c2a26c715ca8d1119ad";
   }));
 }
